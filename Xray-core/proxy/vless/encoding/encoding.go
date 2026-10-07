@@ -177,8 +177,11 @@ func DecodeResponseHeader(reader io.Reader, request *protocol.RequestHeader) (*A
 		return nil, errors.New("failed to read response version").Base(err)
 	}
 
-	if buffer.Byte(0) != request.Version {
-		return nil, errors.New("unexpected response version. Expecting ", int(request.Version), " but actually ", int(buffer.Byte(0)))
+	respVer := buffer.Byte(0)
+	// Dialect servers (flow 0–255 → request version byte) may echo that
+	// version or reply with stock VLESS version 0. Accept either.
+	if respVer != request.Version && respVer != 0 {
+		return nil, errors.New("unexpected response version. Expecting ", int(request.Version), " but actually ", int(respVer))
 	}
 
 	responseAddons, err := DecodeHeaderAddons(&buffer, reader)

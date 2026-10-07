@@ -8,7 +8,7 @@ on:
       - "26.*"
 
 env:
-  V2XIOS_VERSION: 26.9.9-v2x2
+  V2XIOS_VERSION: 26.9.9-v2x3
 
 jobs:
   build:

@@ -196,11 +196,12 @@ func invokePingBatch(payload json.RawMessage) string {
 		}
 	}
 
-	results, err := xray.PingBatchWithLocation(
+	results, err := xray.PingBatchWithSettle(
 		configs,
 		request.Timeout,
 		request.URL,
 		request.LocationURL,
+		request.SettleMs,
 	)
 	if err != nil {
 		return encodeInvokeResponse(nil, err)

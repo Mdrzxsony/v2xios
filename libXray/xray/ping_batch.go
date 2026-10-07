@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/xtls/libxray/nodep"
@@ -58,6 +57,14 @@ func PingBatch(
 // PingBatchWithLocation uses the same forced-outbound client for latency and
 // optional location probes. The two probe results are independent.
 func PingBatchWithLocation(items []PingBatchItem, timeout int, targetURL, locationURL string) ([]PingBatchResult, error) {
+	return PingBatchWithSettle(items, timeout, targetURL, locationURL, 0)
+}
+
+// PingBatchWithSettle is PingBatchWithLocation with an early return: when
+// settleMillis > 0 the batch ends settleMillis after the first successful
+// probe instead of waiting for every dead item to time out. Items still in
+// flight are reported as timed out.
+func PingBatchWithSettle(items []PingBatchItem, timeout int, targetURL, locationURL string, settleMillis int) ([]PingBatchResult, error) {
 	if err := validatePingBatchRequest(items, timeout, targetURL); err != nil {
 		return nil, err
 	}
@@ -109,30 +116,51 @@ func PingBatchWithLocation(items []PingBatchItem, timeout int, targetURL, locati
 	}
 	defer server.Close()
 
-	workerCount := len(prepared)
-	jobs := make(chan preparedPingItem)
-	var workers sync.WaitGroup
-	workers.Add(workerCount)
-	for range workerCount {
-		go func() {
-			defer workers.Done()
-			for item := range jobs {
-				results[item.resultIndex] = probeOutbound(
+	type probeDone struct {
+		resultIndex int
+		result      PingBatchResult
+	}
+	// Buffered so probes still running after an early return never block.
+	done := make(chan probeDone, len(prepared))
+	for _, item := range prepared {
+		go func(item preparedPingItem) {
+			done <- probeDone{
+				resultIndex: item.resultIndex,
+				result: probeOutbound(
 					server,
 					item.outboundTag,
 					timeout,
 					targetURL,
 					locationURL,
-				)
+				),
 			}
-		}()
+		}(item)
 	}
 
-	for _, item := range prepared {
-		jobs <- item
+	finished := make(map[int]bool, len(prepared))
+	var settle <-chan time.Time
+collect:
+	for len(finished) < len(prepared) {
+		select {
+		case probe := <-done:
+			results[probe.resultIndex] = probe.result
+			finished[probe.resultIndex] = true
+			if settleMillis > 0 && settle == nil && probe.result.Success {
+				settle = time.After(time.Duration(settleMillis) * time.Millisecond)
+			}
+		case <-settle:
+			break collect
+		}
 	}
-	close(jobs)
-	workers.Wait()
+	for _, item := range prepared {
+		if !finished[item.resultIndex] {
+			results[item.resultIndex] = PingBatchResult{
+				Success: false,
+				Delay:   nodep.PingDelayTimeout,
+				Error:   "not finished before batch settled",
+			}
+		}
+	}
 
 	return results, nil
 }

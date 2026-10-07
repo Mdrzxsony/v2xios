@@ -81,6 +81,9 @@ type PingBatchRequest struct {
 	Timeout     int                    `json:"timeout,omitempty"`
 	URL         string                 `json:"url,omitempty"`
 	LocationURL string                 `json:"locationUrl,omitempty"`
+	// SettleMs > 0 returns once this many ms have passed after the first
+	// successful probe; unfinished items are reported as timed out.
+	SettleMs int `json:"settleMs,omitempty"`
 }
 
 type PingBatchItemRequest struct {

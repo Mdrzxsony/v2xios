@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 LIBXRAY="$ROOT/libXray"
 XRAY="$ROOT/Xray-core"
 OUT_DIR="$ROOT/dist"
-VERSION="${V2XIOS_VERSION:-26.9.9-v2x3}"
+VERSION="${V2XIOS_VERSION:-26.9.9-v2x4}"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "error: Apple xcframework build requires macOS + Xcode." >&2

@@ -12,3 +12,10 @@ Stock Xray always writes protocol version `0`. Some peers expect the version byt
    - Inbound/outbound validators accept numeric flow 0–255 in addition to Vision names.
 
 Vision (`xtls-rprx-vision`, `xtls-rprx-vision-udp443`) behavior is unchanged.
+
+## libXray pingBatch cap (v2x4)
+
+3. **`libXray/xray/ping_batch.go`**
+   - `maxPingBatchConfigs` 5 → 64. One `pingBatch` call probes all items in
+     parallel inside a single Xray instance, and calls are serialized by
+     `coreServerMu`, so the cap is the app's real ping concurrency.

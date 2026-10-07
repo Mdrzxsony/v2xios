@@ -279,18 +279,11 @@ func TestValidatePingBatchRequest(t *testing.T) {
 			errorText: "absolute HTTP",
 		},
 		{
-			name: "too many configs",
-			items: []PingBatchItem{
-				{},
-				{},
-				{},
-				{},
-				{},
-				{},
-			},
+			name:      "too many configs",
+			items:     make([]PingBatchItem, maxPingBatchConfigs+1),
 			timeout:   1,
 			targetURL: "https://example.com",
-			errorText: "more than 5 configs",
+			errorText: "more than 64 configs",
 		},
 	}
 

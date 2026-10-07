@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	maxPingBatchConfigs = 5
+	maxPingBatchConfigs = 64
 )
 
 type PingBatchItem struct {

@@ -8,7 +8,7 @@ on:
       - "26.*"
 
 env:
-  V2XIOS_VERSION: 26.9.9-v2x3
+  V2XIOS_VERSION: 26.9.9-v2x4
 
 jobs:
   build:
@@ -51,11 +51,10 @@ jobs:
             --tag "${{ github.ref_name }}" \
             --checksum "$CHECKSUM" \
             --out Package.swift
+          # Never re-upload: a rebuilt zip gets a new checksum and breaks
+          # every Package.swift already pointing at this release.
           if gh release view "${{ github.ref_name }}" >/dev/null 2>&1; then
-            gh release upload "${{ github.ref_name }}" \
-              dist/LibXray.xcframework.zip \
-              Package.swift \
-              --clobber
+            echo "Release ${{ github.ref_name }} already exists; keeping its assets."
           else
             gh release create "${{ github.ref_name }}" \
               dist/LibXray.xcframework.zip \

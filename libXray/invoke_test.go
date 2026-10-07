@@ -597,7 +597,7 @@ func TestInvokePingBatchRejectsInvalidRequest(t *testing.T) {
 }
 
 func TestInvokePingBatchRejectsMoreThanFiveConfigs(t *testing.T) {
-	configs := make([]PingBatchItemRequest, 6)
+	configs := make([]PingBatchItemRequest, 65)
 	for i := range configs {
 		configs[i] = PingBatchItemRequest{
 			XrayJson: `{"outbounds":[{"protocol":"freedom"}]}`,
@@ -613,9 +613,9 @@ func TestInvokePingBatchRejectsMoreThanFiveConfigs(t *testing.T) {
 		},
 	)
 	if response.Success {
-		t.Fatal("PingBatch should reject more than five configs")
+		t.Fatal("PingBatch should reject more than 64 configs")
 	}
-	if !strings.Contains(response.Err, "more than 5 configs") {
+	if !strings.Contains(response.Err, "more than 64 configs") {
 		t.Fatalf("error = %q", response.Err)
 	}
 	if got := string(response.Data); got != "null" {

@@ -9,8 +9,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "LibXray",
-            url: "https://github.com/Mdrzxsony/v2xios/releases/download/26.9.9-v2x1/LibXray.xcframework.zip",
-            checksum: "a20d3dd86644d6cd774a35c949c64648c6dbe96f26cbcdc9ec7cadf9f1d8a27f"
+            url: "https://github.com/Mdrzxsony/v2xios/releases/download/26.9.9-v2x2/LibXray.xcframework.zip",
+            checksum: "9ff4bbbd49a78594357df057f935f276096eb797cbb4c39324014ca3582060e1"
         )
     ]
 )

@@ -1,0 +1,14 @@
+.DS_Store
+*.xcframework/
+*.xcframework.zip
+dist/
+*.a
+*.o
+*.dylib
+*.so
+*.dll
+bin/
+.idea/
+.vscode/
+*.swp
+*.tmp

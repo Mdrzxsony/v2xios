@@ -1,0 +1,58 @@
+name: Build Apple LibXray
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+      - "26.*"
+
+env:
+  V2XIOS_VERSION: 26.9.9-v2x1
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
+          cache-dependency-path: |
+            libXray/go.sum
+            Xray-core/go.sum
+
+      - name: Build xcframework
+        run: |
+          chmod +x scripts/build-apple.sh
+          V2XIOS_VERSION="${{ env.V2XIOS_VERSION }}" ./scripts/build-apple.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LibXray.xcframework
+          path: |
+            dist/LibXray.xcframework.zip
+            dist/LibXray.xcframework.zip.sha256
+            dist/Package.swift
+            dist/VERSION
+
+      - name: Publish release Package.swift
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CHECKSUM="$(tr -d '[:space:]' < dist/LibXray.xcframework.zip.sha256)"
+          python3 scripts/write-package-swift.py \
+            --repo "${{ github.repository }}" \
+            --tag "${{ github.ref_name }}" \
+            --checksum "$CHECKSUM" \
+            --out Package.swift
+          gh release create "${{ github.ref_name }}" \
+            dist/LibXray.xcframework.zip \
+            Package.swift \
+            --title "${{ github.ref_name }}" \
+            --notes "Custom LibXray ${{ env.V2XIOS_VERSION }} with VLESS dialect flow 0-255 (Vision unchanged)."
